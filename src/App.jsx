@@ -1,34 +1,36 @@
-import { useCallback,    useState } from "react";
-import "./App.css";
+import { useCallback, useState } from "react";
 import axios from "axios";
-import { debounce   } from "lodash";
+import { debounce } from "lodash";
 
-const apiKey = import.meta.env.VITE_API_KEY;
+import Card from "./components/Card";
+
+import "./App.css";
 
 function App() {
+  const [apiKey, setApiKey] = useState(""); //"945130f387b84fcdb6dfd5df44a30791"
+  const [apiKeyErrorMessage, setApiKeyErrorMessage] = useState("");
+
   const [searchText, setSearchText] = useState("");
+  const [pageNumber, setPageNumber] = useState(1);
   const [isSearching, setIsSearching] = useState(false);
 
   const [games, setGames] = useState([]);
 
-  const searchQueryString = searchText ? `&search=${searchText}` : "";
   const reaultsCount = games.results?.length;
-
-  // useEffect(() => {
-  //   if (!searchText) return;
-
-  //   debouncedApiCall(searchText);
-  // }, [searchText]);
-
-  const handleSearch = debounce((search) => {
-    setSearchText(() => search);
-  }, 1000);
+  const platforms = games.results?.platforms;
+  const previousSearchUrl = games?.previous;
+  const nextSearchUrl = games?.next;
 
   const chandleInputSearchChange = (searchText) => {
     console.log("searchText: ", searchText);
     setIsSearching(() => true);
     setSearchText(() => searchText);
-    // debouncedApiCall(searchText);
+    setApiKeyErrorMessage(() => "");
+
+    if (!apiKey) {
+      setApiKeyErrorMessage(() => "Please provide your api key");
+      return;
+    }
     debouncedApiCall(searchText);
   };
 
@@ -36,11 +38,10 @@ function App() {
     debounce((search) => {
       console.log("debouncedApiCalled");
 
-
       const url = `https://api.rawg.io/api/games?key=${apiKey}&search=${search}`;
       apiCall(url);
     }, 1000),
-    []
+    [apiKey]
   );
 
   const apiCall = (url) => {
@@ -54,36 +55,66 @@ function App() {
       })
       .catch((error) => {
         console.error("Error fetching data: ", error);
+        setApiKeyErrorMessage(() => `${error.message}. Check your api key and try again.`);
       });
   };
 
   return (
-    <div className="container text-start">
+    <div className="p-3 container-fluid text-start">
+      {/* HEADER  */}
       <div className="row">
         <div className="col">
-          <input
-            type="text"
-            name="search"
-            onChange={(e) => {
-              chandleInputSearchChange(e.target.value);
-            }}
-            placeholder="Wyszukaj grę"
-          />
-          <input type="text" placeholder="Klucz do API" />
-          <button>Szukaj</button>
-          <button>Wyczyść</button>
-          <button>Poprzednia strona</button>
-          <button>Następna strona</button>
+          <div className="d-flex bg-info p-3">
+            <span>+ Games DB</span>
+            <input
+              className="flex-grow-1 mx-3"
+              type="text"
+              name="search"
+              value={searchText}
+              onChange={(e) => {
+                chandleInputSearchChange(e.target.value);
+              }}
+              placeholder="Wyszukaj grę"
+            />
+            <input
+              type="text"
+              name="apikey"
+              value={apiKey}
+              onChange={(e) => {
+                setApiKeyErrorMessage(() => "");
+                setApiKey(e.target.value);
+              }}
+              placeholder="Type your api key here"
+            />
+          </div>
         </div>
       </div>
 
+      {/* MAIN  */}
+      <main>
+        <div className="row">
+          <div className="col">
+            <div className="d-flex bg-light p-3">{apiKeyErrorMessage && <p>{apiKeyErrorMessage}</p>}</div>
+          </div>
+        </div>
+      </main>
+
+      {/* FOOTER  */}
       <div className="row">
         <div className="col">
-          <p>
-            search = <strong>{searchText}</strong>
-          </p>
-          <p>searchQueryString = {searchQueryString}</p>
-          <p>reaultsCount = {reaultsCount}</p>
+          <div className="d-flex bg-warning p-3">
+            <input type="number" name="page" value={pageNumber} onChange={(e) => setPageNumber(e.target.value)} />
+          </div>
+          <div>
+            <button
+              onClick={() => {
+                const url = `https://api.rawg.io/api/games?key=${apiKey}&search=${searchText}&page=${pageNumber}`;
+                apiCall(url);
+              }}
+            >
+              Search
+            </button>
+          </div>
         </div>
       </div>
 
@@ -96,10 +127,7 @@ function App() {
           {!isSearching && (
             <div className="grid grid-cols-4 gap-4">
               {games.results?.map((game) => (
-                <div key={game.id} className="border p-5">
-                  <h2>{game.name}</h2>
-                  <p>{game.description_raw}</p>
-                </div>
+                <Card title={game.name} platforms={game.platforms} image={game.background_image} />
               ))}
             </div>
           )}

@@ -9,7 +9,7 @@ const Card = ({ title, platforms, image }) => {
         <p>{title}</p>
         {/* <p className="small">{JSON.stringify(platforms, null, 2)}</p> */}
 
-        {platforms.map((platform, i) => (
+        {platforms?.map((platform, i) => (
           <span className="small" key={i}>
             {platform?.platform?.name} {i < platforms.length - 1 ? ", " : ""}
           </span>

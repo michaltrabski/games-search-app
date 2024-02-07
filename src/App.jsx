@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { debounce } from "lodash";
 
@@ -6,20 +6,25 @@ import Card from "./components/Card";
 
 import "./App.css";
 
+const PAGE_SIZE = 10;
+
 function App() {
-  const [apiKey, setApiKey] = useState(""); //"945130f387b84fcdb6dfd5df44a30791"
+  const [apiKey, setApiKey] = useState("945130f387b84fcdb6dfd5df44a30791"); //"945130f387b84fcdb6dfd5df44a30791"
   const [apiKeyErrorMessage, setApiKeyErrorMessage] = useState("");
 
-  const [searchText, setSearchText] = useState("");
+  const [searchText, setSearchText] = useState("mario");
   const [pageNumber, setPageNumber] = useState(1);
   const [isSearching, setIsSearching] = useState(false);
 
   const [games, setGames] = useState([]);
 
-  const reaultsCount = games.results?.length;
-  const platforms = games.results?.platforms;
-  const previousSearchUrl = games?.previous;
-  const nextSearchUrl = games?.next;
+  const reaultsCount = !!games.count ? games.count : 0;
+  const pagesCount = reaultsCount ? Math.floor(reaultsCount / PAGE_SIZE) : 0;
+
+  useEffect(() => {
+    const url = `https://api.rawg.io/api/games?key=${apiKey}&search=${searchText}&page=${pageNumber}&page_size=${PAGE_SIZE}`;
+    apiCall(url);
+  }, [apiKey, pageNumber]);
 
   const chandleInputSearchChange = (searchText) => {
     console.log("searchText: ", searchText);
@@ -29,6 +34,7 @@ function App() {
 
     if (!apiKey) {
       setApiKeyErrorMessage(() => "Please provide your api key");
+      setGames(() => []);
       return;
     }
     debouncedApiCall(searchText);
@@ -36,9 +42,9 @@ function App() {
 
   const debouncedApiCall = useCallback(
     debounce((search) => {
-      console.log("debouncedApiCalled");
+      const url = `https://api.rawg.io/api/games?key=${apiKey}&search=${search}&page_size=${PAGE_SIZE}`;
+      console.log("debouncedApiCalled", { url });
 
-      const url = `https://api.rawg.io/api/games?key=${apiKey}&search=${search}`;
       apiCall(url);
     }, 1000),
     [apiKey]
@@ -56,6 +62,7 @@ function App() {
       .catch((error) => {
         console.error("Error fetching data: ", error);
         setApiKeyErrorMessage(() => `${error.message}. Check your api key and try again.`);
+        setGames(() => []);
       });
   };
 
@@ -94,7 +101,29 @@ function App() {
       <main>
         <div className="row">
           <div className="col">
-            <div className="d-flex bg-light p-3">{apiKeyErrorMessage && <p>{apiKeyErrorMessage}</p>}</div>
+            <div className="d-flex bg-light p-3">
+              {apiKeyErrorMessage && <p>{apiKeyErrorMessage}</p>}
+
+              {!apiKeyErrorMessage && (
+                <div>
+                  {isSearching && <p>Searching...</p>}
+
+                  {!isSearching && (
+                    <>
+                      <h2>
+                        Found {!!reaultsCount ? reaultsCount : 0} games! (On {pagesCount} pages.)
+                      </h2>
+
+                      <div className="grid grid-cols-4 gap-4">
+                        {games.results?.map((game) => (
+                          <Card title={game.name} platforms={game.platforms} image={game.background_image} />
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </main>
@@ -105,36 +134,10 @@ function App() {
           <div className="d-flex bg-warning p-3">
             <input type="number" name="page" value={pageNumber} onChange={(e) => setPageNumber(e.target.value)} />
           </div>
-          <div>
-            <button
-              onClick={() => {
-                const url = `https://api.rawg.io/api/games?key=${apiKey}&search=${searchText}&page=${pageNumber}`;
-                apiCall(url);
-              }}
-            >
-              Search
-            </button>
-          </div>
         </div>
       </div>
 
-      <div className="row">
-        <div className="col">
-          <h2>Found {reaultsCount} games!</h2>
-
-          {isSearching && <p>Searching...</p>}
-
-          {!isSearching && (
-            <div className="grid grid-cols-4 gap-4">
-              {games.results?.map((game) => (
-                <Card title={game.name} platforms={game.platforms} image={game.background_image} />
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      <pre>{JSON.stringify(games, null, 2)}</pre>
+      <pre>{JSON.stringify({ ...games, results: ["xxxx"] }, null, 2)}</pre>
       <p>
         Cel: Przygotowanie aplikacji której celem jest wyszukiwanie i paginowanie danych z bazy danych gier dostępnych
         na konsole i komputery osobiste:
@@ -142,20 +145,23 @@ function App() {
       <p>Przykładowe rozwiązanie Wymagania:</p>
       <ul>
         <li>Aplikacja napisana w ReactJS</li>
-        <li>Wykorzystaj reduxa do przechowywania danych</li>
-        <li>Testy jednostkowe napisz w testing library</li>
-        <li>Style CSS napisane samodzielnie</li>
-        <li>Wyszukiwarka nazwy gry (wyszukanie na enter lub debounce)</li>
+        <li className="text-danger">Wykorzystaj reduxa do przechowywania danych</li>
+        <li className="text-danger">Testy jednostkowe napisz w testing library</li>
+        <li className="text-danger">Style CSS napisane samodzielnie</li>
+        <li>
+          Wyszukiwarka nazwy gry (wyszukanie na <span className="text-danger">enter</span> lub debounce)
+        </li>
         <li>Pole na wpisanie klucza do API (walidacja braku klucza)</li>
         <li>
-          Paginacja w formie numerycznego inputa (wpisz nr strony) wraz z walidacją minimalnych i maksymalnych wartości
+          Paginacja w formie numerycznego inputa (wpisz nr strony) wraz z{" "}
+          <span className="text-danger">walidacją minimalnych i maksymalnych wartości</span>
         </li>
         <li>Limit 10 wpisów na stronę</li>
-        <li>
+        <li className="text-danger">
           Mile widziane dodanie w prawym górnym rogu screenshota gry badge’a z oceną z metacritic (dostępna w api)
         </li>
-        <li>Rozwiązanie jak najbardziej podobne wyglądowo do przykładowego rozwiązania</li>
-        <li>
+        <li className="text-danger">Rozwiązanie jak najbardziej podobne wyglądowo do przykładowego rozwiązania</li>
+        <li className="text-danger">
           Aplikacja powinna być responsywna (dobrze wyglądać dla różnych rozdzielczości ekranu - od 300px szerokości
           wzwyż)
         </li>

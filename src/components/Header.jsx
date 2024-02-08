@@ -12,6 +12,11 @@ const Header = (props) => {
     dispatch(updateSearch(searchText));
   };
 
+  const chandleInputKeyChange = (keyText) => {
+    dispatch(updateKey(keyText));
+    apiCall(params);
+  };
+
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -37,7 +42,7 @@ const Header = (props) => {
           type="text"
           name="key"
           value={key}
-          onChange={(e) => dispatch(updateKey(e.target.value))}
+          onChange={(e) => chandleInputKeyChange(e.target.value)}
           placeholder="Type your api key here"
         />
       </form>

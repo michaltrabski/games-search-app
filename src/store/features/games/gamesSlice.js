@@ -2,7 +2,7 @@ import axios from "axios";
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
 const initialState = {
-  reaultsCount: 0,
+  resultsCount: 0,
   games: [],
   page_size: 10,
   key: "",
@@ -14,8 +14,6 @@ const initialState = {
 };
 
 export const fetchGames = createAsyncThunk("games/fetchGames", async ({ key, search, page, page_size }) => {
-  if (!key || !search) return;
-
   const params = { key, search, page, page_size };
 
   const response = await axios.get(`https://api.rawg.io/api/games`, { params });
@@ -31,13 +29,13 @@ export const games = createSlice({
     updateKey: (state, action) => {
       state.key = action.payload;
       state.page = 1;
-      state.reaultsCount = 0;
+      state.resultsCount = 0;
       state.isSearching = true;
     },
     updateSearch: (state, action) => {
       state.search = action.payload;
       state.page = 1;
-      state.reaultsCount = 0;
+      state.resultsCount = 0;
       state.apiErrorMessage = "";
 
       if (!action.payload) {
@@ -61,10 +59,14 @@ export const games = createSlice({
       state.isSearching = true;
     });
     builder.addCase(fetchGames.fulfilled, (state, action) => {
-      state.apiRequestState = "fulfilled";
-      state.isSearching = false;
-      state.games = action.payload.results;
-      state.reaultsCount = action.payload.count;
+      if (action.payload) {
+        state.apiRequestState = "fulfilled";
+        state.isSearching = false;
+        state.games = action.payload.results;
+        state.resultsCount = action.payload.count;
+        state.apiErrorMessage = "";
+        return;
+      }
     });
     builder.addCase(fetchGames.rejected, (state, action) => {
       state.apiRequestState = "rejected";

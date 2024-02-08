@@ -9,11 +9,11 @@ import Footer from "./components/Footer";
 
 function App() {
   const dispatch = useDispatch();
-  const { games, page_size, key, apiErrorMessage, search, page, isSearching, reaultsCount } = useSelector(
-    (state) => state.games
-  );
 
-  const pagesCount = reaultsCount ? Math.ceil(reaultsCount / page_size) : 0;
+  const { games, page_size, key, apiErrorMessage, search, page, isSearching, resultsCount, apiRequestState } =
+    useSelector((state) => state.games);
+
+  const pagesCount = resultsCount ? Math.ceil(resultsCount / page_size) : 0;
 
   const params = { key, search, page, page_size };
 
@@ -22,7 +22,6 @@ function App() {
       dispatch(updateApiErrorMessage("Please type a game name to search."));
       return;
     }
-
     if (!key) {
       dispatch(updateApiErrorMessage("Please type your api key."));
       return;
@@ -32,15 +31,7 @@ function App() {
   }, [key, search, page_size]);
 
   useEffect(() => {
-    if (!search) {
-      dispatch(updateApiErrorMessage("Please type a game name to search."));
-      return;
-    }
-
-    if (!key) {
-      dispatch(updateApiErrorMessage("Please type your api key."));
-      return;
-    }
+    if (!search || !key) return;
 
     apiCall(params);
   }, [page]);
@@ -65,10 +56,10 @@ function App() {
           <div>
             {isSearching && <p>Searching...</p>}
 
-            {!isSearching && (
+            {!isSearching && apiRequestState !== "" && (
               <>
                 <h2>
-                  Found {reaultsCount} games! (On {pagesCount} pages.)
+                  Found {resultsCount} games! (On {pagesCount} pages.)
                 </h2>
 
                 <div className="grid">

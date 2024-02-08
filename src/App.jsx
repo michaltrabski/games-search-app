@@ -2,10 +2,10 @@ import { useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { debounce } from "lodash";
 
-import Card from "./components/Card";
+import Card from "./components/Card/Card";
 import { fetchGames, updateApiErrorMessage } from "./store/features/games/gamesSlice";
-import Header from "./components/Header";
-import Footer from "./components/Footer";
+import Header from "./components/Header/Header";
+import Footer from "./components/Footer/Footer";
 
 function App() {
   const dispatch = useDispatch();

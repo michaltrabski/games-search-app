@@ -1,6 +1,6 @@
 const Card = ({ title, platforms, image }) => {
   return (
-    <div className="bg-dark">
+    <div data-testid="card" className="bg-dark">
       <div className="card-image" style={{ backgroundImage: `url(${image})` }}></div>
       <div className="p-3">
         <p>{title}</p>

@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 
-import { updatePage } from "../store/features/games/gamesSlice";
+import { updatePage } from "../../store/features/games/gamesSlice";
 
 const Footer = () => {
   const dispatch = useDispatch();

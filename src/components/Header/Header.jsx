@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 
-import { updateSearch, updateKey } from "../store/features/games/gamesSlice";
+import { updateSearch, updateKey } from "../../store/features/games/gamesSlice";
 
 const Header = (props) => {
   const { apiCall, params } = props;
